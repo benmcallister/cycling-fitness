@@ -18,45 +18,25 @@ mean_power <- function(df){
 mean_power(AllData)
 
 # find average ppower for each date
-powerMeans <- AllData %>% group_by(date) %>% summarize(mean(power))
-powerMeans <- rename(powerMeans, meanPower = "mean(power)")
+dailyMeans <- AllData %>% group_by(date) %>% summarize(mean(power), mean(heart_rate, na.rm = TRUE))
+dailyMeans <- rename(dailyMeans, meanPower = "mean(power)", meanHR = "mean(heart_rate, na.rm = TRUE)")
+dailyMeans$pHR <- dailyMeans$meanPower / dailyMeans$meanHR
 
 # graph average power
-AvgPowerGraph <- ggplot(powerMeans, aes(x=date, y=meanPower)) +
+AvgPowerGraph <- ggplot(dailyMeans, aes(x=date, y=meanPower)) +
   geom_col() + 
   xlab("")
 AvgPowerGraph
 
-allGraph <- ggplot(AllData, aes(x=time, y=power)) +
+# graph average HR
+AvgHrGraph <- ggplot(dailyMeans, aes(x=date, y=meanHR)) +
   geom_line() + 
   xlab("")
-allGraph
+AvgHrGraph
 
-
-
-
-# filepath <- system.file("extdata/tcx/", "2022-03-26_14-00-19", package = "trackeR")
-cycleFeb <- readTCX(file = "2022-02-17_05-54-47.tcx", timezone = "GMT")
-cycleMarch24 <- readTCX(file = "1437503.tcx", timezone = "GMT")
-cycleMarch26 <- readTCX(file = "2022-03-26_14-00-19.tcx", timezone = "GMT")
-
-
-head(cycleMarch24)
-
-mean(cycleMarch$power)
-mean(cycleFeb$power)
-str(cycleMarch)
-
-cycleMarch$powerHR <- cycleMarch$power / cycleMarch$heart_rate
-
-marchGraph <- ggplot(cycleMarch, aes(x=time, y=heart_rate)) +
+# graph average HR
+AvgRatioGraph <- ggplot(dailyMeans, aes(x=date, y=pHR)) +
   geom_line() + 
   xlab("")
-marchGraph
+AvgRatioGraph
 
-cycleFeb$powerHR <- cycleFeb$power / cycleFeb$heart_rate
-
-febGraph <- ggplot(cycleFeb, aes(x=time, y=heart_rate)) +
-  geom_line() + 
-  xlab("")
-febGraph
