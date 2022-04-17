@@ -11,6 +11,8 @@ AllData <-
 
 AllData$date <- as.Date(AllData$time)
 
+last_wko_date <- max(AllData$date)
+
 # function to calculate workout duration in minutes
 find_duration <- function(times){
   interval(min(times), max(times)) / dminutes(1)
@@ -25,31 +27,38 @@ dailyPowerHR <- AllData %>% group_by(date) %>%
                list(~ round(mean(., na.rm = TRUE)), ~ median(., na.rm = TRUE)))
 
 dailySummary <- merge(dailyDuration, dailyPowerHR)
+dailySummary$DiffHR <- dailySummary$heart_rate_round - dailySummary$heart_rate_median
+dailySummary$Diffpower <- dailySummary$power_round - dailySummary$power_median
+dailySummary$pHR <- dailySummary$power_median / dailySummary$heart_rate_median
+dailySummary$wattMinutes <- dailySummary$power_median * dailySummary$duration
 
-# don't know why this one doesn't work
-#dailyMeans <- AllData %>% group_by(date) %>% summarie(mean(power), mean(heart_rate, na.rm = TRUE))
-# dailyMeans <- rename(dailyMeans, meanPower = "mean(power)", meanHR = "mean(heart_rate, na.rm = TRUE)")
-dailyMeans$pHR <- dailyMeans$power / dailyMeans$heart_rate
+dailySummary
 
 # create new variable - training day
-dailyMeans$TrainingDay <- dailyMeans$date - min(dailyMeans$date)
-mutate(dailyMeans, SessionNum = row_number())
+dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date)
+mutate(dailySummary, SessionNum = row_number())
 
 # graph average power
-AvgPowerGraph <- ggplot(dailyMeans, aes(x=date, y=power)) +
+AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=power_median)) +
   geom_col() + 
   xlab("")
 AvgPowerGraph
 
+# graph power minutes
+wattMinutesGraph <- ggplot(dailySummary, aes(x=date, y=wattMinutes)) +
+  geom_col() + 
+  xlab("")
+wattMinutesGraph
+
 # graph average HR
-AvgHrGraph <- ggplot(dailyMeans, aes(x=date, y=heart_rate)) +
+AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=heart_rate_median)) +
   geom_line() + 
   xlab("")
 AvgHrGraph
 
 # graph average HR
-AvgRatioGraph <- ggplot(dailyMeans, aes(x=date, y=pHR)) +
-  geom_line() + 
+AvgRatioGraph <- ggplot(dailySummary, aes(x=date, y=pHR)) +
+  geom_col() + 
   xlab("")
 AvgRatioGraph
 
@@ -61,6 +70,12 @@ first_workout = AllData[AllData$date=="2022-02-22", ] # Data for first workout
 dim(first_workout)
 tail(first_workout)
 scatter.smooth(x=first_workout$heart_rate, y=first_workout$power, main="Power ~ Heart Rate")  
+
+last_wko = AllData[AllData$date==last_wko_date, ] # Data for last workout
+dim(last_wko)
+tail(last_wko)
+scatter.smooth(x=last_wko$heart_rate, y=last_wko$power, main="Power ~ Heart Rate")  
+
 
 first_wko_lm = lm(heart_rate ~ power, data=first_workout)
 summary(first_wko_lm)
