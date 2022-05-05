@@ -18,6 +18,28 @@ find_duration <- function(times){
   interval(min(times), max(times)) / dminutes(1)
 }
 
+# distribution of HR
+HRDist <- ggplot(AllData, aes(x = heart_rate)) + 
+  geom_histogram(binwidth = 1) + 
+  xlim(60, 190)  + 
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)))
+HRDist
+
+powerDist <- ggplot(AllData, aes(x = power)) + 
+  geom_histogram(binwidth = 1) + 
+  xlim(60, 175) + 
+  geom_vline(aes(xintercept = median(power, na.rm = TRUE)))
+powerDist
+
+mean(AllData$power)
+
+ggplot(AllData, aes(heart_rate, power, color = date)) + 
+  geom_point(alpha = 0.1, shape = 3) +
+  xlim(75, 175) +
+  ylim(0, 175) + geom_smooth()
+
+
+
 # summarize duration of each day's workout
 dailyDuration <- AllData %>% group_by(date) %>% 
   summarize_at(vars(time), funs(duration = find_duration))
@@ -31,12 +53,13 @@ dailySummary$DiffHR <- dailySummary$heart_rate_round - dailySummary$heart_rate_m
 dailySummary$Diffpower <- dailySummary$power_round - dailySummary$power_median
 dailySummary$pHR <- dailySummary$power_median / dailySummary$heart_rate_median
 dailySummary$wattMinutes <- dailySummary$power_median * dailySummary$duration
+dailySummary$wattHours <- dailySummary$power_median * dailySummary$duration/60
 
 dailySummary
 
 # create new variable - training day
-dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date)
-mutate(dailySummary, SessionNum = row_number())
+dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
+dailySummary <- mutate(dailySummary, SessionNum = row_number())
 
 # graph average power
 AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=power_median)) +
@@ -52,7 +75,7 @@ wattMinutesGraph
 
 # graph average HR
 AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=heart_rate_median)) +
-  geom_line() + 
+  geom_col() + 
   xlab("")
 AvgHrGraph
 
