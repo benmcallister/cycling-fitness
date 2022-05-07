@@ -45,8 +45,9 @@ selectData <- selectData %>% mutate(minutes = as.numeric((minutes = round(elapse
 
 ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
   geom_point(alpha = 0.05, shape = 3) +
-  xlim(75, 175) +
-  ylim(0, 175) 
+  xlim(75, 165) +
+  ylim(0, 160) +
+  scale_color_viridis_c()
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
