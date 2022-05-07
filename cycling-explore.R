@@ -44,18 +44,29 @@ selectData <- selectData %>% mutate(minutes = as.numeric((minutes = round(elapse
 
 median(selectData$power)
 median(selectData$heart_rate, na.rm = TRUE)
+min(selectData$date)
+max(selectData$date)
+
 
 allDataPlot <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
   geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
-  xlim(75, 165) +
-  ylim(0, 160) +
-  scale_color_viridis_c() 
+  scale_x_continuous(name = "Heart Rate", expand = c(0,0), limits = c(80, 160)) +
+  scale_y_continuous(name = "Power (Watts)", expand = c(0,0), limits = c(0, 160)) +
+  scale_color_viridis_c()
 
-allDataPlot+ 
+allDataPlot + 
   geom_hline(aes(yintercept = median(power, na.rm = TRUE)),  linetype = "dotted", alpha = 0.8) + 
-  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)),  linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = 85, y = 125, label = "Median Power = 118", vjust = 1, size = 3.5, color = "grey40") + 
-  annotate("text", x = 125, y = 55, label = "Median HR = 134",vjust = 1, size = 3.5, color = "grey40")
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)),
+             linetype = "dotted", alpha = 0.8) + 
+  annotate("text", x = 91, y = 124, label = "Median Power = 118", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
+  annotate("text", x = 136, y = 50, label = "Median HR = 134", 
+           vjust = 1, size = 3, color = "grey40", angle = 270, fontface = "bold") + 
+  xlab("Heart Rate") + ylab("Power (Watts)") +
+  labs(title = "Power vs Heart Rate", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022", 
+       color = "Workout \nDuration") +
+  theme(plot.title = element_text(face="bold"))
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
