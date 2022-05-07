@@ -1,5 +1,5 @@
 library(tidyverse)
-library(plyr)
+# library(plyr)
 library(lubridate)
 library("trackeR")
 
@@ -11,42 +11,56 @@ AllData <-
 
 AllData$date <- as.Date(AllData$time)
 
-last_wko_date <- max(AllData$date)
+selectData <- AllData %>% select(time, date, heart_rate, cadence_cycling, power)
+
+last_wko_date <- max(selectData$date)
+
+# distribution of HR
+HRDist <- ggplot(selectData, aes(x = heart_rate)) + 
+  geom_histogram(binwidth = 1) + 
+  xlim(60, 190)  + 
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)))
+HRDist
+
+powerDist <- ggplot(selectData, aes(x = power)) + 
+  geom_histogram(binwidth = 1) + 
+  xlim(60, 175) + 
+  geom_vline(aes(xintercept = median(power, na.rm = TRUE)))
+powerDist
+
+mean(selectData$power)
+
+ggplot(selectData, aes(heart_rate, power, color = date)) + 
+  geom_point(alpha = 0.05, shape = 3) +
+  xlim(75, 175) +
+  ylim(0, 175) + geom_smooth()
+
+## would be interesting to do color as the elapsed duration of the workout
+df <- selectData %>% group_by(date) %>% mutate(elapsed_time = time - min(time)) %>% ungroup()
+selectData <- selectData %>% group_by(date) %>% 
+  mutate(elapsed_time = difftime(time, min(time), units = "mins")) %>%
+  ungroup() %>% mutate(across(6, round, 2))
+
+selectData <- selectData %>% mutate(minutes = as.numeric((minutes = round(elapsed_time))))
+
+ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
+  geom_point(alpha = 0.05, shape = 3) +
+  xlim(75, 175) +
+  ylim(0, 175) 
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
   interval(min(times), max(times)) / dminutes(1)
 }
 
-# distribution of HR
-HRDist <- ggplot(AllData, aes(x = heart_rate)) + 
-  geom_histogram(binwidth = 1) + 
-  xlim(60, 190)  + 
-  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)))
-HRDist
-
-powerDist <- ggplot(AllData, aes(x = power)) + 
-  geom_histogram(binwidth = 1) + 
-  xlim(60, 175) + 
-  geom_vline(aes(xintercept = median(power, na.rm = TRUE)))
-powerDist
-
-mean(AllData$power)
-
-ggplot(AllData, aes(heart_rate, power, color = date)) + 
-  geom_point(alpha = 0.1, shape = 3) +
-  xlim(75, 175) +
-  ylim(0, 175) + geom_smooth()
-
-
-
 # summarize duration of each day's workout
-dailyDuration <- AllData %>% group_by(date) %>% 
-  summarize_at(vars(time), funs(duration = find_duration))
+dailyDuration <- selectData %>% group_by(date) %>% 
+  summarize_at(vars(time), list(duration = find_duration))
 
-dailyPowerHR <- AllData %>% group_by(date) %>% 
-  summarise_at(vars(power, heart_rate), 
-               list(~ round(mean(., na.rm = TRUE)), ~ median(., na.rm = TRUE)))
+dailyPowerHR <- selectData %>% group_by(date) %>% 
+  summarize_at(vars(power, heart_rate), 
+               list( ~ median(., na.rm = TRUE))) %>%
+  rename(median_power = power, median_HR = heart_rate)
 
 dailySummary <- merge(dailyDuration, dailyPowerHR)
 dailySummary$DiffHR <- dailySummary$heart_rate_round - dailySummary$heart_rate_median
