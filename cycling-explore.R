@@ -36,18 +36,26 @@ ggplot(selectData, aes(heart_rate, power, color = date)) +
   ylim(0, 175) + geom_smooth()
 
 ## would be interesting to do color as the elapsed duration of the workout
-df <- selectData %>% group_by(date) %>% mutate(elapsed_time = time - min(time)) %>% ungroup()
 selectData <- selectData %>% group_by(date) %>% 
   mutate(elapsed_time = difftime(time, min(time), units = "mins")) %>%
   ungroup() %>% mutate(across(6, round, 2))
 
 selectData <- selectData %>% mutate(minutes = as.numeric((minutes = round(elapsed_time))))
 
-ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
-  geom_point(alpha = 0.05, shape = 3) +
+median(selectData$power)
+median(selectData$heart_rate, na.rm = TRUE)
+
+allDataPlot <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
+  geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
   xlim(75, 165) +
   ylim(0, 160) +
-  scale_color_viridis_c()
+  scale_color_viridis_c() 
+
+allDataPlot+ 
+  geom_hline(aes(yintercept = median(power, na.rm = TRUE)),  linetype = "dotted", alpha = 0.8) + 
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)),  linetype = "dotted", alpha = 0.8) + 
+  annotate("text", x = 85, y = 125, label = "Median Power = 118", vjust = 1, size = 3.5, color = "grey40") + 
+  annotate("text", x = 125, y = 55, label = "Median HR = 134",vjust = 1, size = 3.5, color = "grey40")
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
@@ -64,11 +72,9 @@ dailyPowerHR <- selectData %>% group_by(date) %>%
   rename(median_power = power, median_HR = heart_rate)
 
 dailySummary <- merge(dailyDuration, dailyPowerHR)
-dailySummary$DiffHR <- dailySummary$heart_rate_round - dailySummary$heart_rate_median
-dailySummary$Diffpower <- dailySummary$power_round - dailySummary$power_median
-dailySummary$pHR <- dailySummary$power_median / dailySummary$heart_rate_median
-dailySummary$wattMinutes <- dailySummary$power_median * dailySummary$duration
-dailySummary$wattHours <- dailySummary$power_median * dailySummary$duration/60
+dailySummary$pHR <- dailySummary$median_power / dailySummary$median_HR
+dailySummary$wattMinutes <- dailySummary$median_power * dailySummary$duration
+dailySummary$wattHours <- dailySummary$median_power * dailySummary$duration/60
 
 dailySummary
 
