@@ -15,6 +15,14 @@ selectData <- AllData %>% select(time, date, heart_rate, cadence_cycling, power)
 
 last_wko_date <- max(selectData$date)
 
+## would be interesting to do color as the elapsed duration of the workout
+selectData <- selectData %>% group_by(date) %>% 
+  mutate(elapsed_time = difftime(time, min(time), units = "mins")) %>%
+  head(-150) %>% tail(-150) %>%       #trim first and last 150 observations per wko
+  ungroup() %>% mutate(across(6, round, 2)) %>% 
+  mutate(minutes = as.numeric((minutes = trunc(elapsed_time))))
+
+
 # distribution of HR
 HRDist <- ggplot(selectData, aes(x = heart_rate)) + 
   geom_histogram(binwidth = 1) + 
@@ -28,26 +36,19 @@ powerDist <- ggplot(selectData, aes(x = power)) +
   geom_vline(aes(xintercept = median(power, na.rm = TRUE)))
 powerDist
 
-mean(selectData$power)
-
+# Initial exploratory plot
 ggplot(selectData, aes(heart_rate, power, color = date)) + 
   geom_point(alpha = 0.05, shape = 3) +
   xlim(75, 175) +
   ylim(0, 175) + geom_smooth()
 
-## would be interesting to do color as the elapsed duration of the workout
-selectData <- selectData %>% group_by(date) %>% 
-  mutate(elapsed_time = difftime(time, min(time), units = "mins")) %>%
-  ungroup() %>% mutate(across(6, round, 2))
-
-selectData <- selectData %>% mutate(minutes = as.numeric((minutes = round(elapsed_time))))
-
+# Summary stats
 median(selectData$power)
 median(selectData$heart_rate, na.rm = TRUE)
 min(selectData$date)
 max(selectData$date)
 
-
+## BIG PLOT - ALL HR and POWER
 allDataPlot <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
   geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
   scale_x_continuous(name = "Heart Rate", expand = c(0,0), limits = c(80, 160)) +
@@ -67,6 +68,12 @@ allDataPlot +
        subtitle = "All Rides, Feb 17 - May 1, 2022", 
        color = "Workout \nDuration") +
   theme(plot.title = element_text(face="bold"))
+
+# Time series plot
+ggplot(selectData, aes(elapsed_time, power, color = date)) + 
+  geom_point(alpha = 0.1, shape = 3) +
+  scale_x_continuous() + scale_y_continuous(limits = c(0, 160))  +
+  scale_color_viridis_c("Date", labels = as.Date)
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
@@ -94,7 +101,7 @@ dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
 dailySummary <- mutate(dailySummary, SessionNum = row_number())
 
 # graph average power
-AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=power_median)) +
+AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=median_power)) +
   geom_col() + 
   xlab("")
 AvgPowerGraph
@@ -106,7 +113,7 @@ wattMinutesGraph <- ggplot(dailySummary, aes(x=date, y=wattMinutes)) +
 wattMinutesGraph
 
 # graph average HR
-AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=heart_rate_median)) +
+AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=median_HR)) +
   geom_col() + 
   xlab("")
 AvgHrGraph
