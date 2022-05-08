@@ -100,6 +100,11 @@ dailySummary
 dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
 dailySummary <- mutate(dailySummary, SessionNum = row_number())
 
+ggplot(dailySummary, aes(x=date, y=duration)) +
+  geom_col() + xlab("") + 
+  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold") 
+
 # graph average power
 AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=median_power)) +
   geom_col() + 
