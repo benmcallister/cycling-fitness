@@ -1,5 +1,4 @@
 library(tidyverse)
-# library(plyr)
 library(lubridate)
 library("trackeR")
 
@@ -24,17 +23,35 @@ selectData <- selectData %>% group_by(date) %>%
 
 
 # distribution of HR
-HRDist <- ggplot(selectData, aes(x = heart_rate)) + 
+HRDist <- ggplot(selectData, aes(x = heart_rate, fill = date)) + 
   geom_histogram(binwidth = 1) + 
-  xlim(60, 190)  + 
-  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)))
-HRDist
+  xlim(80, 160)  + 
+  scale_y_continuous("") +
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)), 
+             linetype = "dotted", color = "grey") + 
+  annotate("text", x = 136, y = 2000, label = "Median HR = 134", 
+           vjust = 1, size = 3, color = "white", angle = 270, fontface = "bold") + 
+  xlab("Heart Rate") + ylab("") +
+  labs(title = "Frequency Distribution of Heart Rate", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022") +
+  theme(plot.title = element_text(face="bold"),
+        axis.text.y = element_blank())
+HRDist 
 
 powerDist <- ggplot(selectData, aes(x = power)) + 
   geom_histogram(binwidth = 1) + 
-  xlim(60, 175) + 
-  geom_vline(aes(xintercept = median(power, na.rm = TRUE)))
+  xlim(60, 150) + 
+  geom_vline(aes(xintercept = median(power, na.rm = TRUE)), 
+             linetype = "dotted", color = "grey") + 
+  annotate("text", x = 121, y = 1500, label = "Median Power = 118", 
+           vjust = 1, size = 3, color = "white", angle = 270, fontface = "bold") + 
+  xlab("Heart Rate") + ylab("") +
+  labs(title = "Frequency Distribution of Power (Watts)", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022") +
+  theme(plot.title = element_text(face="bold"),
+        axis.text.y = element_blank())
 powerDist
+
 
 # Initial exploratory plot
 ggplot(selectData, aes(heart_rate, power, color = date)) + 
@@ -60,13 +77,13 @@ allDataPlot +
   geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)),
              linetype = "dotted", alpha = 0.8) + 
   annotate("text", x = 91, y = 124, label = "Median Power = 118", 
-           vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
-  annotate("text", x = 136, y = 50, label = "Median HR = 134", 
-           vjust = 1, size = 3, color = "grey40", angle = 270, fontface = "bold") + 
+           vjust = 1, size = 4, color = "grey40") + 
+  annotate("text", x = 136, y = 47, label = "Median HR = 134", 
+           vjust = 1, size = 4, color = "grey40", angle = 270) + 
   xlab("Heart Rate") + ylab("Power (Watts)") +
   labs(title = "Power vs Heart Rate", 
        subtitle = "All Rides, Feb 17 - May 1, 2022", 
-       color = "Workout \nDuration") +
+       color = "Elapsed \nTime") +
   theme(plot.title = element_text(face="bold"))
 
 # Time series plot
@@ -103,13 +120,22 @@ dailySummary <- mutate(dailySummary, SessionNum = row_number())
 ggplot(dailySummary, aes(x=date, y=duration)) +
   geom_col() + xlab("") + 
   annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)", 
-           vjust = 1, size = 3, color = "grey40", fontface = "bold") 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
+  labs(title = "Workout Duration", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022") +
+  theme(plot.title = element_text(face="bold"))
 
 # graph average power
 AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=median_power)) +
   geom_col() + 
   xlab("")
-AvgPowerGraph
+AvgPowerGraph + 
+  labs(title = "Median Power per Workout", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022",
+       y = "Watts") +
+  theme(plot.title = element_text(face="bold")) + 
+  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold")
 
 # graph power minutes
 wattMinutesGraph <- ggplot(dailySummary, aes(x=date, y=wattMinutes)) +
@@ -121,13 +147,25 @@ wattMinutesGraph
 AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=median_HR)) +
   geom_col() + 
   xlab("")
-AvgHrGraph
+AvgHrGraph + 
+  labs(title = "Median Heart Rate per Workout", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022",
+       y = "") +
+  theme(plot.title = element_text(face="bold")) + 
+  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold")
 
 # graph average HR
 AvgRatioGraph <- ggplot(dailySummary, aes(x=date, y=pHR)) +
   geom_col() + 
   xlab("")
-AvgRatioGraph
+AvgRatioGraph + 
+  labs(title = "Watt-Minute per Heartbeat across Workouts", 
+       subtitle = "All Rides, Feb 17 - May 1, 2022",
+       y = "") +
+  theme(plot.title = element_text(face="bold")) + 
+  annotate("text", x = as.Date("2022-04-01"), y = 0.2, label = "(Spring Break)", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold")
 
 
 # linear model exploration
