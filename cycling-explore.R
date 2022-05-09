@@ -52,6 +52,10 @@ powerDist <- ggplot(selectData, aes(x = power)) +
         axis.text.y = element_blank())
 powerDist
 
+summary(selectData)
+sd(selectData$power)
+sd(selectData$heart_rate, na.rm = TRUE)
+
 
 # Initial exploratory plot
 ggplot(selectData, aes(heart_rate, power, color = date)) + 
@@ -66,7 +70,7 @@ min(selectData$date)
 max(selectData$date)
 
 ## BIG PLOT - ALL HR and POWER
-allDataPlot <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
+allDataPlotBig <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
   geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
   scale_x_continuous(name = "Heart Rate", expand = c(0,0), limits = c(80, 160)) +
   scale_y_continuous(name = "Power (Watts)", expand = c(0,0), limits = c(0, 160)) +
@@ -86,11 +90,44 @@ allDataPlot +
        color = "Elapsed \nTime") +
   theme(plot.title = element_text(face="bold"))
 
+allDataPlotBig <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
+  geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
+  scale_x_continuous("", expand = c(0,0), limits = c(80, 160)) +
+  scale_y_continuous("", expand = c(0,0), limits = c(0, 160)) +
+  scale_color_viridis_c()
+
+allDataPlotBig + 
+  geom_hline(aes(yintercept = median(power, na.rm = TRUE)),  linetype = "dotted", alpha = 0.8) + 
+  geom_vline(aes(xintercept = median(heart_rate, na.rm = TRUE)),
+             linetype = "dotted", alpha = 0.8) +
+  theme(legend.position = "none", axis.text.x=element_blank(), #remove x axis labels
+        axis.ticks.x=element_blank(), #remove x axis ticks
+        axis.text.y=element_blank(),  #remove y axis labels
+        axis.ticks.y=element_blank()  #remove y axis ticks
+  )
+
 # Time series plot
 ggplot(selectData, aes(elapsed_time, power, color = date)) + 
   geom_point(alpha = 0.1, shape = 3) +
   scale_x_continuous() + scale_y_continuous(limits = c(0, 160))  +
   scale_color_viridis_c("Date", labels = as.Date)
+
+threeSessions <- selectData %>% filter(date %in% c("2022-02-22", "2022-03-22", "2022-05-01"))
+
+threeSessions <- selectData %>% filter(date == "2022-02-22" | 
+                                         date == "2022-03-24" | 
+                                         date == "2022-05-01")
+
+ggplot(threeSessions, aes(elapsed_time, power, color = date)) + 
+  geom_point(alpha = 0.2, shape = 3) +
+  scale_x_continuous() + scale_y_continuous(limits = c(0, 160))  +
+  scale_color_viridis_c("Date", labels = as.Date)
+
+
+ggplot(threeSessions, aes(elapsed_time, heart_rate, color = power)) + 
+  geom_point(alpha = 0.05, shape = 3) +
+  scale_x_continuous() + scale_y_continuous(limits = c(60, 160)) +
+  scale_color_gradient(low="blue", high="red", limits = c(80, 160))
 
 # function to calculate workout duration in minutes
 find_duration <- function(times){
