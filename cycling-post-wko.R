@@ -35,28 +35,33 @@ medianRide$efficiency <- medianRide$median_power / medianRide$median_HR
 
 # Get date of most recent workout
 last_wko_date <- max(selectData$date)
-last_wko_date
 
+# Crete dataframe for most recent ride
 lastRide <- selectData %>% filter(date == last_wko_date)
 lastRideRows <- max(lastRide$row_id)
 lastRideLimits <- c(0, lastRideRows)
 
-# Historical Summary stats
+# Calculate Median stats for All Rides and most recent ride
 medPowerAll <- median(selectData$power, na.rm = TRUE)
-powerAnnotationAll <- paste("Median Power \n(All Rides) = ", medPowerAll)
-medPowerLastRide <- median(lastRide$power, na.rm = TRUE)
-powerAnnotationLast <- paste("Median Power \n(Last Ride) = ", medPowerLastRide)
-powerSubtitle <- paste(last_wko_date, " vs. Median Ride")
-
 medHRAll <- median(selectData$heart_rate, na.rm = TRUE)
-medHRLast <- median(lastRide$heart_rate, na.rm = TRUE)
-HRAnnotationAll <- paste("Median HR \n(All Rides) = ", medHRAll)
-HRAnnotationLast <- paste("Median HR \n(Last Ride) = ", medHRLast)
-
 medEfficiencyAll <- median(selectData$efficiency, na.rm = TRUE)
+
+medPowerLast <- median(lastRide$power, na.rm = TRUE)
+medHRLast <- median(lastRide$heart_rate, na.rm = TRUE)
 medEfficiencyLast <- median(lastRide$efficiency, na.rm = TRUE)
+
+# Create variables to automatically annotate median lines
+powerAnnotationAll <- paste("Median Power \n(All Rides) = ", medPowerAll)
+HRAnnotationAll <- paste("Median HR \n(All Rides) = ", medHRAll)
 EffAnnotationAll <- paste("Median Efficiency \n(All Rides) = ", medEfficiencyAll)
+
+powerAnnotationLast <- paste("Median Power \n(Last Ride) = ", medPowerLast)
+HRAnnotationLast <- paste("Median HR \n(Last Ride) = ", medHRLast)
 EffAnnotationLast <- paste("Median Efficiency \n(Last Ride) = ", medEfficiencyLast)
+
+# Create variable to automatically subtitle charts 
+timeSeriesSubtitle <- paste(format(last_wko_date, format="%A %b %d, %Y"),
+                            "vs. Median Ride")
 
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
   geom_point(alpha = 0.15, shape = 3, position = "jitter") + 
@@ -69,17 +74,21 @@ powerPlot +
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
   annotate("text", x = 3000, y = 115, label = powerAnnotationAll, 
           size = 3, color = "grey50", fontface = "bold") + 
-  geom_hline(aes(yintercept = medPowerLastRide),  
+  geom_hline(aes(yintercept = medPowerLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
   annotate("text", x = 400, y = 129, label = powerAnnotationLast, 
            size = 3, color = "grey50", fontface = "bold") + 
   xlab("Time") + ylab("Power (Watts)") +
   labs(title = "Time Series: Power", 
-       subtitle = powerSubtitle, 
-       color = "") +
+       subtitle = timeSeriesSubtitle, 
+       color = "Series") +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank() 
+        axis.ticks.x=element_blank(), 
+        legend.position = c(0.8, 0.2),
+        legend.background = element_rect(colour = 'grey70', 
+                                         fill = 'white', linetype='solid'),
+        legend.title=element_blank()
   )
 
 HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) + 
@@ -99,7 +108,7 @@ HRPlot +
            size = 3, color = "grey50", fontface = "bold") + 
   xlab("Time") + ylab("Heart Rate") +
   labs(title = "Time Series: Heart Rate", 
-       subtitle = powerSubtitle, 
+       subtitle = timeSeriesSubtitle, 
        color = "") +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
@@ -124,7 +133,7 @@ efficiencyPlot +
            size = 3, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Watt-Minute per Heartbeat") +
   labs(title = "Time Series: Watt-Minute per Heartbeat", 
-       subtitle = powerSubtitle, 
+       subtitle = timeSeriesSubtitle, 
        color = "") +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
