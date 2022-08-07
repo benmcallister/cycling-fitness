@@ -43,10 +43,8 @@ lastRideLimits <- c(0, lastRideRows)
 
 # Historical Summary stats
 medPowerAll <- median(selectData$power, na.rm = TRUE)
-medPowerAll
 powerAnnotationAll <- paste("Median Power \n(All Rides) = ", medPowerAll)
 medPowerLastRide <- median(lastRide$power, na.rm = TRUE)
-medPowerLastRide
 powerAnnotationLast <- paste("Median Power \n(Last Ride) = ", medPowerLastRide)
 powerSubtitle <- paste(last_wko_date, " vs. Median Ride")
 
@@ -54,6 +52,11 @@ medHRAll <- median(selectData$heart_rate, na.rm = TRUE)
 medHRLast <- median(lastRide$heart_rate, na.rm = TRUE)
 HRAnnotationAll <- paste("Median HR \n(All Rides) = ", medHRAll)
 HRAnnotationLast <- paste("Median HR \n(Last Ride) = ", medHRLast)
+
+medEfficiencyAll <- median(selectData$efficiency, na.rm = TRUE)
+medEfficiencyLast <- median(lastRide$efficiency, na.rm = TRUE)
+EffAnnotationAll <- paste("Median Efficiency \n(All Rides) = ", medEfficiencyAll)
+EffAnnotationLast <- paste("Median Efficiency \n(Last Ride) = ", medEfficiencyLast)
 
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
   geom_point(alpha = 0.15, shape = 3, position = "jitter") + 
@@ -104,18 +107,30 @@ HRPlot +
   )
 
 
-ggplot(lastRide, aes(row_id, efficiency)) + 
-  geom_point(position = "jitter", alpha = 0.3, shape = 2) + 
+efficiencyPlot <- ggplot(lastRide, aes(row_id, efficiency, color = "Last Ride")) + 
+  geom_point(position = "jitter", alpha = 0.3, shape = 1) + geom_smooth() +
   geom_smooth(data = medianRide, aes(y = efficiency, color = "red"), 
               alpha = 0.5) + labs(color = "Median Ride") +
-  xlim(lastRideLimits) + ylim(0.8, 1.1)
+  xlim(lastRideLimits) + ylim(0.8, 1.2)
 
+efficiencyPlot +
+  geom_hline(aes(yintercept = medEfficiencyAll),  
+             linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
+  annotate("text", x = 2000, y = 0.88, label = EffAnnotationAll, 
+           size = 3, color = "grey30", fontface = "bold") + 
+  geom_hline(aes(yintercept = medEfficiencyLast),  
+             linetype = "solid", alpha = 1, color = "#F8766D") + 
+  annotate("text", x = 400, y = 1, label = EffAnnotationLast, 
+           size = 3, color = "grey30", fontface = "bold") + 
+  xlab("Time") + ylab("Watt-Minute per Heartbeat") +
+  labs(title = "Time Series: Watt-Minute per Heartbeat", 
+       subtitle = powerSubtitle, 
+       color = "") +
+  theme(plot.title = element_text(face="bold"), 
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank() 
+  )
 
-# Calculate Summary stats
-medPower_All <- median(selectData$power)
-medPower_All
-medHR_All <- median(selectData$heart_rate, na.rm = TRUE)
-medHR_All
 
 ### CREATE THE DAILY SUMMARY DATAFRAME
 
@@ -145,6 +160,11 @@ median(dailySummary$pHR, na.rm = TRUE )
 median(dailySummary$median_power, na.rm = TRUE )
 median(selectData$power, na.rm = TRUE)
 
+summarySubtitle <- paste("All Rides,", 
+                         format(min(selectData$date), format="%b %d"), 
+                         "-", 
+                         format(max(selectData$date), format="%b %d %Y"))
+
 # create new variable - training day
 dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
 dailySummary <- mutate(dailySummary, SessionNum = row_number())
@@ -152,10 +172,11 @@ dailySummary <- mutate(dailySummary, SessionNum = row_number())
 # DURATION PLOT
 ggplot(dailySummary, aes(x=date, y=duration)) +
   geom_col() + xlab("") + 
-  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)", 
+  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)",
+           angle = 90,
            vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
   labs(title = "Workout Duration", 
-       subtitle = "All Rides, Feb 17 - May 1, 2022") +
+       subtitle = summarySubtitle) +
   theme(plot.title = element_text(face="bold"))
 
 # MEDIAN POWER PLOT
@@ -164,14 +185,14 @@ AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=median_power)) +
   xlab("")
 AvgPowerGraph + 
   labs(title = "Median Power per Workout", 
-       subtitle = "All Rides, Feb 17 - June 25, 2022",
+       subtitle = summarySubtitle,
        y = "Watts") +
   theme(plot.title = element_text(face="bold")) + 
   annotate("text", x = as.Date("2022-04-01"), y = 70, label = "(Spring Break)", 
            vjust = 1, size = 2, color = "grey40")  + 
   annotate("text", x = as.Date("2022-05-15"), y = 70, label = "COVID-19", 
            vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
-  geom_hline(aes(yintercept = medPower_All),  linetype = "dotted", alpha = 0.8) + 
+  geom_hline(aes(yintercept = medPowerAll),  linetype = "dotted", alpha = 0.8) + 
   annotate("text", x = as.Date("2022-05-15"), y = 125, label = "median = 119", 
            vjust = 1, size = 3, color = "grey40")
 
@@ -187,16 +208,20 @@ AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=median_HR)) +
   xlab("")
 AvgHrGraph + 
   labs(title = "Median Heart Rate per Workout", 
-       subtitle = "All Rides, Feb 17 - June 25, 2022",
+       subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-04-01"), y = 70, label = "(Spring Break)", 
-           vjust = 1, size = 2, color = "grey40") + 
-  annotate("text", x = as.Date("2022-05-16"), y = 70, label = "COVID-19", 
-           vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
-  geom_hline(aes(yintercept = medHR_All),  linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-05-16"), y = 140, label = "median HR = 133", 
-           vjust = 1, size = 3, color = "grey40")
+  annotate("text", x = as.Date("2022-03-31"), y = 70, 
+           label = "(Spring Break)", vjust = 1, size = 3, 
+           color = "grey40", angle = 90, fontface = "bold") + 
+  annotate("text", x = as.Date("2022-05-16"), y = 70, 
+           label = "COVID-19", vjust = 1, size = 4, 
+           color = "grey40", fontface = "bold") + 
+  geom_hline(aes(yintercept = medHRAll),  
+             linetype = "dotted", alpha = 0.8) + 
+  annotate("text", x = as.Date("2022-05-16"), y = 137, 
+           label = HRAnnotationAll, vjust = 1, size = 2.5, 
+           color = "grey20", fontface = "bold")
 
 
 # WATT MINUNTE PER HEARTBEAT
@@ -205,14 +230,14 @@ AvgRatioGraph <- ggplot(dailySummary, aes(x=date, y=pHR)) +
   xlab("")
 AvgRatioGraph + 
   labs(title = "Watt-Minute per Heartbeat per Workout", 
-       subtitle = "All Rides, Feb 17 - June 25, 2022",
+       subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
   annotate("text", x = as.Date("2022-04-01"), y = 0.59, label = "Spring \nBreak", 
            vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
   annotate("text", x = as.Date("2022-05-16"), y = 0.57, label = "COVID-19", 
            vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
-  geom_hline(aes(yintercept = pHR_All),  linetype = "dotted", alpha = 0.8) + 
+  geom_hline(aes(yintercept = medEfficiencyAll),  linetype = "dotted", alpha = 0.8) + 
   annotate("text", x = as.Date("2022-05-16"), y = 0.94, label = "median = 0.9", 
            vjust = 1, size = 3, color = "grey40")
 
