@@ -25,6 +25,11 @@ selectData <- selectData %>% group_by(date) %>%
   ungroup() %>% mutate(across(6, round, 2)) %>% 
   mutate(minutes = as.numeric((minutes = trunc(elapsed_time))))
 
+# Summary stats
+summary(selectData)
+sd(selectData$power)
+sd(selectData$heart_rate, na.rm = TRUE)
+
 
 # distribution of HR
 HRDist <- ggplot(selectData, aes(x = heart_rate, fill = heart_rate)) + 
@@ -56,16 +61,12 @@ powerDist <- ggplot(selectData, aes(x = power)) +
         axis.text.y = element_blank())
 powerDist
 
-summary(selectData)
-sd(selectData$power)
-sd(selectData$heart_rate, na.rm = TRUE)
-
 
 # Initial exploratory plot
 ggplot(selectData, aes(heart_rate, power, color = date)) + 
   geom_point(alpha = 0.05, shape = 3) +
   xlim(75, 175) +
-  ylim(0, 175) + geom_smooth()
+  ylim(0, 175)# + geom_smooth()
 
 # Summary stats
 medPower_All <- median(selectData$power)
@@ -78,7 +79,7 @@ max(selectData$date)
 pHR_All <-median(selectData$power) / median(selectData$heart_rate, na.rm = TRUE)
 
 ## BIG PLOT - ALL HR and POWER
-allDataPlotBig <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
+allDataPlot <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
   geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
   scale_x_continuous(name = "Heart Rate", expand = c(0,0), limits = c(80, 160)) +
   scale_y_continuous(name = "Power (Watts)", expand = c(0,0), limits = c(0, 160)) +
@@ -99,7 +100,7 @@ allDataPlot +
   theme(plot.title = element_text(face="bold"))
 
  allDataPlotBig <- ggplot(selectData, aes(heart_rate, power, color = minutes)) + 
-  geom_jitter(alpha = 0.08, shape = 3, width = 0.5) +
+  geom_jitter(alpha = 0.5, shape = 16, width = 0.5) +
   scale_x_continuous("", expand = c(0,0), limits = c(80, 160)) +
   scale_y_continuous("", expand = c(0,0), limits = c(0, 160)) +
   scale_color_viridis_c()
@@ -231,9 +232,36 @@ AvgRatioGraph +
   annotate("text", x = as.Date("2022-05-16"), y = 0.94, label = "median = 0.9", 
            vjust = 1, size = 3, color = "grey40")
 
+# plot hist of wko durations
+durationDist <- ggplot(dailySummary, aes(x = duration, fill = duration)) + 
+  geom_histogram(binwidth = 1) +
+  geom_vline(aes(xintercept = 30), 
+             linetype = "dashed", color = "red") + 
+  annotate("text", x = 29, y = 5, label = "30 minutes", 
+           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
+  geom_vline(aes(xintercept = 40), 
+             linetype = "dashed", color = "red") + 
+  annotate("text", x = 39, y = 5, label = "40 minutes", 
+           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
+  geom_vline(aes(xintercept = 45), 
+             linetype = "dashed", color = "red") + 
+  annotate("text", x = 44, y = 5, label = "45 minutes", 
+           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
+  geom_vline(aes(xintercept = 50), 
+             linetype = "dashed", color = "red") + 
+  annotate("text", x = 49, y = 5, label = "50 minutes", 
+           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
+  geom_vline(aes(xintercept = 60), 
+             linetype = "dashed", color = "red") + 
+  annotate("text", x = 59, y = 5, label = "60 minutes", 
+           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
+  xlab("Workout Duration (one-minute increments)") + ylab("Number of Workouts") +
+  labs(title = "Frequency Workout Duration (n = 34)", 
+       subtitle = "All Rides, Feb 17 - July 9, 2022") +
+  theme(plot.title = element_text(face="bold"))
+durationDist 
 
-
-# select recent date and previous date to compare
+  # select recent date and previous date to compare
 beforeAfter <- selectData %>% filter(date == "2022-04-14" | 
                                        date == "2022-06-25") 
 
