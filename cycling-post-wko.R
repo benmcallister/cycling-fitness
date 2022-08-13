@@ -67,7 +67,7 @@ powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) +
   geom_point(alpha = 0.15, shape = 3, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_power, color = "Median Ride"), 
             alpha = 0.5) + #labs(color = "hello") +
-  xlim(lastRideLimits) + ylim(80, 150)
+  xlim(lastRideLimits) + ylim(90, 160)
 
 powerPlot +
   geom_hline(aes(yintercept = medPowerAll),  
@@ -85,14 +85,14 @@ powerPlot +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(), 
-        legend.position = c(0.8, 0.2),
+        legend.position = c(0.88, 0.15),
         legend.background = element_rect(colour = 'grey70', 
                                          fill = 'white', linetype='solid'),
         legend.title=element_blank()
   )
 
 HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) + 
-  geom_point(alpha = 0.1, shape = 4) + 
+  geom_point(alpha = 0.1, shape = 4, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_HR, color = "Median Ride"), 
               alpha = 0.5) + 
   xlim(lastRideLimits) + ylim(90, 150)
@@ -100,24 +100,28 @@ HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) +
 HRPlot +
   geom_hline(aes(yintercept = medHRAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
-  annotate("text", x = 400, y = 135, label = HRAnnotationAll, 
-           size = 3, color = "grey50", fontface = "bold") + 
+  annotate("text", x = 0, y = (medHRAll-3), label = HRAnnotationAll, 
+           size = 3, color = "grey50", fontface = "bold", hjust = 0) + 
   geom_hline(aes(yintercept = medHRLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 300, y = 126, label = HRAnnotationLast, 
-           size = 3, color = "grey50", fontface = "bold") + 
+  annotate("text", x = 0, y = (medHRLast+3), label = HRAnnotationLast, 
+           size = 3, color = "grey50", fontface = "bold", hjust = 0) + 
   xlab("Time") + ylab("Heart Rate") +
   labs(title = "Time Series: Heart Rate", 
        subtitle = timeSeriesSubtitle, 
        color = "") +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank() 
+        axis.ticks.x=element_blank(),
+        legend.position = c(0.88, 0.15),
+        legend.background = element_rect(colour = 'grey70', 
+                                         fill = 'white', linetype='solid'),
+        legend.title=element_blank()
   )
 
 
 efficiencyPlot <- ggplot(lastRide, aes(row_id, efficiency, color = "Last Ride")) + 
-  geom_point(position = "jitter", alpha = 0.3, shape = 1) + geom_smooth() +
+  geom_point(position = "jitter", alpha = 0.3, shape = 1) + #geom_smooth() +
   geom_smooth(data = medianRide, aes(y = efficiency, color = "red"), 
               alpha = 0.5) + labs(color = "Median Ride") +
   xlim(lastRideLimits) + ylim(0.8, 1.2)
@@ -132,12 +136,16 @@ efficiencyPlot +
   annotate("text", x = 400, y = 1, label = EffAnnotationLast, 
            size = 3, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Watt-Minute per Heartbeat") +
-  labs(title = "Time Series: Watt-Minute per Heartbeat", 
+  labs(title = "Time Series: \"Efficiency\" (Watt-Minute per Heartbeat)", 
        subtitle = timeSeriesSubtitle, 
        color = "") +
   theme(plot.title = element_text(face="bold"), 
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank() 
+        axis.ticks.x=element_blank(),
+        legend.position = c(0.88, 0.85),
+        legend.background = element_rect(colour = 'grey70', 
+                                         fill = 'white', linetype='solid'),
+        legend.title=element_blank()
   )
 
 
@@ -178,32 +186,53 @@ summarySubtitle <- paste("All Rides,",
 dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
 dailySummary <- mutate(dailySummary, SessionNum = row_number())
 
+lastRideSummary <- dailySummary %>% filter(date == last_wko_date)
+
 # DURATION PLOT
 ggplot(dailySummary, aes(x=date, y=duration)) +
-  geom_col() + xlab("") + 
-  annotate("text", x = as.Date("2022-04-01"), y = 25, label = "(Spring Break)",
+  geom_col() + ylab("Minutes") + xlab("") + 
+  annotate("text", x = as.Date("2022-03-31"), y = 25, label = "(Spring Break)",
            angle = 90,
+           vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
+  annotate("text", x = as.Date("2022-05-15"), y = 15, label = "COVID-19", 
            vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
   labs(title = "Workout Duration", 
        subtitle = summarySubtitle) +
-  theme(plot.title = element_text(face="bold"))
+  theme(plot.title = element_text(face="bold")) + 
+  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
+
 
 # MEDIAN POWER PLOT
 AvgPowerGraph <- ggplot(dailySummary, aes(x=date, y=median_power)) +
-  geom_col() + 
+  geom_point() + 
   xlab("")
 AvgPowerGraph + 
   labs(title = "Median Power per Workout", 
        subtitle = summarySubtitle,
        y = "Watts") +
+  ylim(75, 185) +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-04-01"), y = 70, label = "(Spring Break)", 
-           vjust = 1, size = 2, color = "grey40")  + 
-  annotate("text", x = as.Date("2022-05-15"), y = 70, label = "COVID-19", 
-           vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
+#  annotate("text", x = as.Date("2022-03-31"), y = 120, label = "(Spring Break)", 
+#           vjust = 1, size = 3, color = "grey40", angle = 90,)  + 
+  annotate("text", x = as.Date("2022-05-14"), y = 125, label = "COVID-19", 
+           vjust = 1, size = 3, color = "grey40") + 
   geom_hline(aes(yintercept = medPowerAll),  linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-05-15"), y = 125, label = "median = 119", 
-           vjust = 1, size = 3, color = "grey40")
+  annotate("segment", x = as.Date("2022-03-01"), y = 145, 
+           xend = as.Date("2022-03-01"), yend = medPowerAll,
+           arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
+           alpha = 0.4) + 
+  annotate("text", x = as.Date("2022-03-01"), y = (149), label = "median = 119", 
+           vjust = 1, size = 3, color = "grey40") + 
+  geom_point(data = lastRideSummary, 
+             aes(date, median_power), 
+             color="red", size = 2) +
+  geom_label(data = lastRideSummary, 
+             aes(date, median_power, label = median_power), 
+             color="red", nudge_x = -7) +
+  annotate("text", x = as.Date("2022-07-15"), y = (185), label = "Tabata Ride", 
+           vjust = 1, size = 3, color = "grey40") 
+
+
 
 # graph power minutes
 wattMinutesGraph <- ggplot(dailySummary, aes(x=date, y=wattMinutes)) +
@@ -230,7 +259,8 @@ AvgHrGraph +
              linetype = "dotted", alpha = 0.8) + 
   annotate("text", x = as.Date("2022-05-16"), y = 137, 
            label = HRAnnotationAll, vjust = 1, size = 2.5, 
-           color = "grey20", fontface = "bold")
+           color = "grey20", fontface = "bold") + 
+  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
 
 
 # WATT MINUNTE PER HEARTBEAT
@@ -242,109 +272,12 @@ AvgRatioGraph +
        subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-04-01"), y = 0.59, label = "Spring \nBreak", 
-           vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
+  annotate("text", x = as.Date("2022-03-31"), y = 0.50, label = "Spring Break", 
+           vjust = 1, size = 3, color = "grey40", fontface = "bold", angle = 90) + 
   annotate("text", x = as.Date("2022-05-16"), y = 0.57, label = "COVID-19", 
            vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
   geom_hline(aes(yintercept = medEfficiencyAll),  linetype = "dotted", alpha = 0.8) + 
   annotate("text", x = as.Date("2022-05-16"), y = 0.94, label = "median = 0.9", 
-           vjust = 1, size = 3, color = "grey40")
+           vjust = 1, size = 3, color = "grey40") + 
+  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
 
-# PLOT DURATION DISTRIBUTION
-durationDist <- ggplot(dailySummary, aes(x = duration, fill = duration)) + 
-  geom_histogram(binwidth = 1) +
-  geom_vline(aes(xintercept = 30), 
-             linetype = "dashed", color = "red") + 
-  annotate("text", x = 29, y = 5, label = "30 minutes", 
-           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
-  geom_vline(aes(xintercept = 40), 
-             linetype = "dashed", color = "red") + 
-  annotate("text", x = 39, y = 5, label = "40 minutes", 
-           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
-  geom_vline(aes(xintercept = 45), 
-             linetype = "dashed", color = "red") + 
-  annotate("text", x = 44, y = 5, label = "45 minutes", 
-           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
-  geom_vline(aes(xintercept = 50), 
-             linetype = "dashed", color = "red") + 
-  annotate("text", x = 49, y = 5, label = "50 minutes", 
-           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
-  geom_vline(aes(xintercept = 60), 
-             linetype = "dashed", color = "red") + 
-  annotate("text", x = 59, y = 5, label = "60 minutes", 
-           vjust = 1, size = 3, color = "red", angle = 90, fontface = "bold") + 
-  xlab("Workout Duration (one-minute increments)") + ylab("Number of Workouts") +
-  labs(title = "Frequency Workout Duration (n = 34)", 
-       subtitle = "All Rides, Feb 17 - July 9, 2022") +
-  theme(plot.title = element_text(face="bold"))
-durationDist 
-
-# BEFORE AFTER COMPARISON
-beforeAfter <- selectData %>% filter(date == "2022-04-14" | 
-                                       date == "2022-08-03") 
-
-beforeAfter <- mutate(beforeAfter, SessionNum = as.factor(date))
-beforeAfter$pHR <- beforeAfter$power / beforeAfter$heart_rate
-
-bA_meds <- beforeAfter %>% group_by(date) %>% 
-  summarize(med_HR = median(heart_rate, na.rm = TRUE), med_Power = median(power))
-
-
-# mu <- beforeAfter %>% group_by(SessionNum) %>% summarize(medHR = median(heart_rate))
-
-
-ggplot(beforeAfter, aes(x = heart_rate, fill = SessionNum)) + 
-  geom_histogram(alpha = 0.5, position = "dodge") + 
-  geom_vline(aes(xintercept = median(selectData$heart_rate, na.rm = TRUE)),  linetype = "solid", alpha = 0.5) + 
-  geom_vline(aes(xintercept = 139), linetype = "dotted", alpha = 0.8) + 
-  geom_vline(aes(xintercept = 130), linetype = "dotted", alpha = 0.8) + 
-  xlim(85, 160)
-
-ggplot(beforeAfter, aes(x = power, fill = SessionNum)) + 
-  geom_histogram(alpha = 0.5, position = "dodge") + xlim(85, 150) + 
-  geom_vline(aes(xintercept = medPower_All),  linetype = "solid", alpha = 0.5) + 
-  geom_vline(aes(xintercept = 132), linetype = "dotted", alpha = 0.8) + 
-  geom_vline(aes(xintercept = 127), linetype = "dotted", alpha = 0.8) + 
-  xlim(85, 160)  + 
-  annotate("text", x = 91, y = 124, label = "Median Power = 118", 
-           vjust = 1, size = 4, color = "grey40") + 
-  annotate("text", x = 136, y = 47, label = "Median HR = 134", 
-           vjust = 1, size = 4, color = "grey40", angle = 270)
-
-beforeAfterPlotBig <- ggplot(beforeAfter, aes(heart_rate, power, color = SessionNum)) + 
-  geom_jitter(alpha = 0.3, shape = 3, width = 0.5) +
-  scale_x_continuous(name = "Heart Rate", expand = c(0,0), limits = c(110, 160)) +
-  scale_y_continuous(name = "Power (Watts)", expand = c(0,0), limits = c(110, 160)) 
-
-beforeAfterPlotBig + 
-  geom_hline(aes(yintercept = medPower_All),  linetype = "solid", alpha = 0.8) + 
-  geom_vline(aes(xintercept = medHR_All), linetype = "solid", alpha = 0.8) + 
-  annotate("text", x = 150, y = 117, label = "Median Power (all rides) = 119", 
-           vjust = 0, size = 3, color = "grey40", fontface = "bold") + 
-  annotate("text", x = 131.5, y = 148, label = "Median HR (all rides) = 134", 
-           vjust = 1, size = 3, color = "grey40", angle = 90, fontface = "bold") + 
-  xlab("Heart Rate") + ylab("Power (Watts)") +
-  labs(title = "Power vs Heart Rate", 
-       subtitle = "Pre-COVID (April 14) and Post-COVID (June 25)", 
-       color = "Date") +
-  theme(plot.title = element_text(face="bold")) +
-  geom_hline(data= bA_meds, aes(yintercept = med_Power,col=as.factor(date)), linetype = "longdash") +
-  geom_vline(data= bA_meds, aes(xintercept = med_HR,col=as.factor(date)), linetype = "longdash")
-
-
-# time series exploration
-latestSession <- selectData %>% filter(date == max(selectData$date))
-
-threeSessions <- selectData %>% filter(date == "2022-02-22" | 
-                                         date == "2022-03-22" | 
-                                         date == "2022-06-25")
-
-ggplot(threeSessions, aes(elapsed_time, power, color = date)) + 
-  geom_point(alpha = 0.1, shape = 2) +
-  scale_x_continuous() + scale_y_continuous(limits = c(0, 160))  
-
-
-ggplot(threeSessions, aes(elapsed_time, heart_rate, color = power)) + 
-  geom_point(alpha = 0.6, shape = 3) +
-  scale_x_continuous() + scale_y_continuous(limits = c(60, 160)) +
-  scale_color_gradient(low="blue", high="red", limits = c(80, 160))
