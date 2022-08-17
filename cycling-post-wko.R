@@ -63,6 +63,17 @@ EffAnnotationLast <- paste("Median Efficiency \n(Last Ride) = ", medEfficiencyLa
 timeSeriesSubtitle <- paste(format(last_wko_date, format="%A %b %d, %Y"),
                             "vs. Median Ride")
 
+# simple graph of most recent ride
+
+ggplot(lastRide, aes(time, power)) + 
+  geom_point(aes(y = power)) + 
+  geom_line(linetype = "dotted") + 
+  geom_line(aes(y = heart_rate), linetype = "solid", color = "red")
+
+ggplot(lastRide, aes(time, heart_rate)) + 
+  geom_point(color = "red")
+
+# POWERPLOT
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
   geom_point(alpha = 0.15, shape = 3, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_power, color = "Median Ride"), 
