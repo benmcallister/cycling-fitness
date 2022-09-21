@@ -275,7 +275,7 @@ wattMinutesGraph +
              color="red", size = 2) +
   geom_text(data = lastRideSummary, 
              aes(date, wattMinutes, label = round(wattMinutes)), 
-             color="red", nudge_y = 400)
+             color="red", nudge_y = 400) 
 
 dailySummary$wattMinutes 
 rank(-dailySummary$wattMinutes)
@@ -285,26 +285,33 @@ dailySummary[22,]
 
 # MEDIAN HR PLOT
 AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=median_HR)) +
-  geom_col() + 
+  geom_point() + 
   xlab("")
 AvgHrGraph + 
   labs(title = "Median Heart Rate per Workout", 
        subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-03-31"), y = 70, 
+  annotate("text", x = as.Date("2022-03-31"), y = 131, 
            label = "(Spring Break)", vjust = 1, size = 3, 
            color = "grey40", angle = 90, fontface = "bold") + 
-  annotate("text", x = as.Date("2022-05-16"), y = 70, 
-           label = "COVID-19", vjust = 1, size = 4, 
-           color = "grey40", fontface = "bold") + 
+  annotate("text", x = as.Date("2022-05-16"), y = 128, 
+           label = "COVID-19", vjust = 1, size = 3, 
+           color = "grey40") + 
   geom_hline(aes(yintercept = medHRAll),  
              linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-05-16"), y = 137, 
-           label = HRAnnotationAll, vjust = 1, size = 2.5, 
-           color = "grey20", fontface = "bold") + 
-  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
-
+  annotate("text", x = as.Date("2022-05-16"), y = 150, 
+           label = HRAnnotationAll, vjust = 1, size = 3, 
+           color = "grey50", fontface = "bold") + 
+  geom_point(data = dailySummary[which.max(dailySummary$date), ], 
+             color="#F8766D") +
+  annotate("segment", x = as.Date("2022-05-15"), y = 145, 
+         xend = as.Date("2022-05-15"), yend = medHRAll,
+         arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
+         alpha = 0.4) +
+  geom_label(data = lastRideSummary, 
+             aes(date, median_HR, label = median_HR), 
+             color="red", nudge_y = 4)
 
 
 # WATT MINUNTE PER HEARTBEAT
