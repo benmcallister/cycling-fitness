@@ -306,8 +306,6 @@ AvgHrGraph +
   geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
 
 
-ggplot(subset(conjugate_2022_topSets, parentExercise == "Squat-All" & 
-                workoutName == "ME Lower" & reps < 10))
 
 # WATT MINUNTE PER HEARTBEAT
 AvgRatioGraph <- ggplot(subset(dailySummary, duration > 10), aes(x=date, y=pHR)) +
