@@ -35,6 +35,7 @@ medianRide$efficiency <- medianRide$median_power / medianRide$median_HR
 
 # Get date of most recent workout
 last_wko_date <- max(selectData$date)
+last_wko_date
 
 # Crete dataframe for most recent ride
 lastRide <- selectData %>% filter(date == last_wko_date)
@@ -63,8 +64,7 @@ EffAnnotationLast <- paste("Median Efficiency \n(Last Ride) = ", medEfficiencyLa
 timeSeriesSubtitle <- paste(format(last_wko_date, format="%A %b %d, %Y"),
                             "vs. Median Ride")
 
-# simple graph of most recent ride
-
+# simple graph of most recent ride - REQUIRE HR
 ggplot(lastRide, aes(time, power)) + 
   geom_point(aes(y = power)) + 
   geom_line(linetype = "dotted") + 
@@ -75,7 +75,7 @@ ggplot(lastRide, aes(time, heart_rate)) +
 
 # POWERPLOT
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
-  geom_point(alpha = 0.15, shape = 3, position = "jitter") + 
+  geom_point(alpha = 0.2, shape = 3, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_power, color = "Median Ride"), 
             alpha = 0.5) + #labs(color = "hello") +
   xlim(lastRideLimits) + ylim(90, 160)
@@ -84,11 +84,11 @@ powerPlot +
   geom_hline(aes(yintercept = medPowerAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
   annotate("text", x = 3000, y = 115, label = powerAnnotationAll, 
-          size = 3, color = "grey50", fontface = "bold") + 
+          size = 5, color = "grey30", fontface = "bold") + 
   geom_hline(aes(yintercept = medPowerLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 400, y = 129, label = powerAnnotationLast, 
-           size = 3, color = "grey50", fontface = "bold") + 
+  annotate("text", x = 300, y = 140, label = powerAnnotationLast, 
+           size = 5, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Power (Watts)") +
   labs(title = "Time Series: Power", 
        subtitle = timeSeriesSubtitle, 
@@ -106,17 +106,17 @@ HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) +
   geom_point(alpha = 0.1, shape = 4, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_HR, color = "Median Ride"), 
               alpha = 0.5) + 
-  xlim(lastRideLimits) + ylim(90, 150)
+  xlim(lastRideLimits) + ylim(90, 160)
 
 HRPlot +
   geom_hline(aes(yintercept = medHRAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
-  annotate("text", x = 0, y = (medHRAll-3), label = HRAnnotationAll, 
-           size = 3, color = "grey50", fontface = "bold", hjust = 0) + 
+  annotate("text", x = 0, y = (medHRAll-4), label = HRAnnotationAll, 
+           size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
   geom_hline(aes(yintercept = medHRLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 0, y = (medHRLast+3), label = HRAnnotationLast, 
-           size = 3, color = "grey50", fontface = "bold", hjust = 0) + 
+  annotate("text", x = 0, y = (medHRLast+4), label = HRAnnotationLast, 
+           size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
   xlab("Time") + ylab("Heart Rate") +
   labs(title = "Time Series: Heart Rate", 
        subtitle = timeSeriesSubtitle, 
@@ -132,20 +132,20 @@ HRPlot +
 
 
 efficiencyPlot <- ggplot(lastRide, aes(row_id, efficiency, color = "Last Ride")) + 
-  geom_point(position = "jitter", alpha = 0.3, shape = 1) + #geom_smooth() +
+  geom_point(position = "jitter", alpha = 0.4, shape = 1) + #geom_smooth() +
   geom_smooth(data = medianRide, aes(y = efficiency, color = "red"), 
               alpha = 0.5) + labs(color = "Median Ride") +
-  xlim(lastRideLimits) + ylim(0.8, 1.2)
+  xlim(lastRideLimits) + ylim(0.8, 1.3)
 
 efficiencyPlot +
   geom_hline(aes(yintercept = medEfficiencyAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
-  annotate("text", x = 2000, y = 0.88, label = EffAnnotationAll, 
-           size = 3, color = "grey30", fontface = "bold") + 
+  annotate("text", x = 1500, y = 0.87, label = EffAnnotationAll, 
+           size = 5, color = "grey30", fontface = "bold") + 
   geom_hline(aes(yintercept = medEfficiencyLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 400, y = 1, label = EffAnnotationLast, 
-           size = 3, color = "grey30", fontface = "bold") + 
+  annotate("text", x = 400, y = 1.01, label = EffAnnotationLast, 
+           size = 5, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Watt-Minute per Heartbeat") +
   labs(title = "Time Series: \"Efficiency\" (Watt-Minute per Heartbeat)", 
        subtitle = timeSeriesSubtitle, 
@@ -182,6 +182,8 @@ dailySummary$pHR <- dailySummary$median_power / dailySummary$median_HR
 dailySummary$wattMinutes <- dailySummary$median_power * dailySummary$duration
 dailySummary$wattHours <- dailySummary$median_power * dailySummary$duration/60
 medianDuration <- median(dailySummary$duration)
+medianEnergy <- median(dailySummary$wattMinutes)
+
 
 dailySummary
 median(dailySummary$pHR, na.rm = TRUE )
@@ -198,10 +200,13 @@ dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
 dailySummary <- mutate(dailySummary, SessionNum = row_number())
 
 lastRideSummary <- dailySummary %>% filter(date == last_wko_date)
+medEnergyLast <- lastRideSummary$wattMinutes
+
+
 
 # DURATION PLOT
 ggplot(dailySummary, aes(x=date, y=duration)) +
-  geom_col() + ylab("Minutes") + xlab("") + 
+  geom_point() + ylab("Minutes") + xlab("") + 
   annotate("text", x = as.Date("2022-03-31"), y = 25, label = "(Spring Break)",
            angle = 90,
            vjust = 1, size = 3, color = "grey40", fontface = "bold") + 
@@ -210,7 +215,8 @@ ggplot(dailySummary, aes(x=date, y=duration)) +
   labs(title = "Workout Duration", 
        subtitle = summarySubtitle) +
   theme(plot.title = element_text(face="bold")) + 
-  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
+  geom_point(data = dailySummary[which.max(dailySummary$date), ], 
+             shape = 21, color="#F8766D", size = 2, stroke = 2)
 
 
 # MEDIAN POWER PLOT
@@ -223,8 +229,8 @@ AvgPowerGraph +
        y = "Watts") +
   ylim(75, 185) +
   theme(plot.title = element_text(face="bold")) + 
-#  annotate("text", x = as.Date("2022-03-31"), y = 120, label = "(Spring Break)", 
-#           vjust = 1, size = 3, color = "grey40", angle = 90,)  + 
+  annotate("text", x = as.Date("2022-03-31"), y = 119, label = "(Spring Break)", 
+           vjust = 1, size = 3, color = "grey40", angle = 90,)  + 
   annotate("text", x = as.Date("2022-05-14"), y = 125, label = "COVID-19", 
            vjust = 1, size = 3, color = "grey40") + 
   geom_hline(aes(yintercept = medPowerAll),  linetype = "dotted", alpha = 0.8) + 
@@ -232,7 +238,7 @@ AvgPowerGraph +
            xend = as.Date("2022-03-01"), yend = medPowerAll,
            arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
            alpha = 0.4) + 
-  annotate("text", x = as.Date("2022-03-01"), y = (149), label = "median = 119", 
+  annotate("text", x = as.Date("2022-03-01"), y = (149), label = paste("median =", medPowerAll), 
            vjust = 1, size = 3, color = "grey40") + 
   geom_point(data = lastRideSummary, 
              aes(date, median_power), 
@@ -240,16 +246,42 @@ AvgPowerGraph +
   geom_label(data = lastRideSummary, 
              aes(date, median_power, label = median_power), 
              color="red", nudge_x = -7) +
-  annotate("text", x = as.Date("2022-07-15"), y = (185), label = "Tabata Ride", 
+  annotate("text", x = as.Date("2022-07-15"), y = (182), label = "Tabata Ride", 
            vjust = 1, size = 3, color = "grey40") 
 
 
 
 # graph power minutes
 wattMinutesGraph <- ggplot(dailySummary, aes(x=date, y=wattMinutes)) +
-  geom_col() + 
+  geom_point() + 
   xlab("")
-wattMinutesGraph
+wattMinutesGraph + 
+  labs(title = "Total Energy per Workout", 
+       subtitle = summarySubtitle,
+       y = "Watt-Minutes") +
+  theme(plot.title = element_text(face="bold")) + 
+  annotate("text", x = as.Date("2022-05-14"), y = 4500, label = "COVID-19", 
+           vjust = 1, size = 3, color = "grey40") + 
+  geom_hline(aes(yintercept = medianEnergy),  linetype = "dotted", alpha = 0.8) + 
+  annotate("segment", x = as.Date("2022-03-01"), y = 145, 
+           xend = as.Date("2022-03-01"), yend = medPowerAll,
+           arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
+           alpha = 0.4) + 
+  annotate("text", x = as.Date("2022-07-01"), y = (medianEnergy+350), 
+           label = paste("median =", round(medianEnergy)), 
+           vjust = 1, size = 3, color = "grey40") + 
+  geom_point(data = lastRideSummary, 
+             aes(date, wattMinutes), 
+             color="red", size = 2) +
+  geom_text(data = lastRideSummary, 
+             aes(date, wattMinutes, label = round(wattMinutes)), 
+             color="red", nudge_y = 400)
+
+dailySummary$wattMinutes 
+rank(-dailySummary$wattMinutes)
+
+which(rank(-dailySummary$wattMinutes)==1)
+dailySummary[22,]
 
 # MEDIAN HR PLOT
 AvgHrGraph <- ggplot(dailySummary, aes(x=date, y=median_HR)) +
@@ -274,21 +306,23 @@ AvgHrGraph +
   geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
 
 
+ggplot(subset(conjugate_2022_topSets, parentExercise == "Squat-All" & 
+                workoutName == "ME Lower" & reps < 10))
+
 # WATT MINUNTE PER HEARTBEAT
-AvgRatioGraph <- ggplot(dailySummary, aes(x=date, y=pHR)) +
-  geom_col() + 
+AvgRatioGraph <- ggplot(subset(dailySummary, duration > 10), aes(x=date, y=pHR)) +
+  geom_point() + 
   xlab("")
 AvgRatioGraph + 
   labs(title = "Watt-Minute per Heartbeat per Workout", 
        subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-03-31"), y = 0.50, label = "Spring Break", 
-           vjust = 1, size = 3, color = "grey40", fontface = "bold", angle = 90) + 
-  annotate("text", x = as.Date("2022-05-16"), y = 0.57, label = "COVID-19", 
-           vjust = 1, size = 4, color = "grey40", fontface = "bold") + 
+  annotate("text", x = as.Date("2022-05-16"), y = 0.9, label = "COVID-19", 
+           size = 3, color = "grey40") + 
   geom_hline(aes(yintercept = medEfficiencyAll),  linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-05-16"), y = 0.94, label = "median = 0.9", 
-           vjust = 1, size = 3, color = "grey40") + 
-  geom_col(data = dailySummary[which.max(dailySummary$date), ], fill="#F8766D")
+  annotate("text", x = as.Date("2022-02-22"), y = 0.94, 
+           label = paste("median =", medEfficiencyAll), 
+           size = 3, color = "grey40") + 
+  geom_point(data = dailySummary[which.max(dailySummary$date), ], color="#F8766D")
 
