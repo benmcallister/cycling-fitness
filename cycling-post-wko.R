@@ -319,15 +319,30 @@ AvgRatioGraph <- ggplot(subset(dailySummary, duration > 10), aes(x=date, y=pHR))
   geom_point() + 
   xlab("")
 AvgRatioGraph + 
-  labs(title = "Watt-Minute per Heartbeat per Workout", 
+  labs(title = "Workout Efficiency: Watt-Minute per Heartbeat", 
        subtitle = summarySubtitle,
        y = "") +
   theme(plot.title = element_text(face="bold")) + 
-  annotate("text", x = as.Date("2022-05-16"), y = 0.9, label = "COVID-19", 
-           size = 3, color = "grey40") + 
-  geom_hline(aes(yintercept = medEfficiencyAll),  linetype = "dotted", alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-02-22"), y = 0.94, 
+  annotate("text", x = as.Date("2022-05-16"), 
+           y = 0.91, 
+           label = "COVID-19", 
+           size = 4, 
+           color = "grey60") + 
+  geom_hline(aes(yintercept = medEfficiencyAll),  
+             linetype = "dotted", 
+             alpha = 0.8) + 
+  annotate("text", x = as.Date("2022-08-05"), y = 0.84, 
            label = paste("median =", medEfficiencyAll), 
-           size = 3, color = "grey40") + 
-  geom_point(data = dailySummary[which.max(dailySummary$date), ], color="#F8766D")
+           size = 4, color = "grey40") + 
+  annotate("segment", x = as.Date("2022-08-05"), y = 0.85, 
+           xend = as.Date("2022-08-05"), yend = medEfficiencyAll,
+           arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
+           alpha = 0.4) +
+  geom_point(data = dailySummary[which.max(dailySummary$date), ], 
+             color="#F8766D",
+             size = 4) +
+  geom_label(data = lastRideSummary, 
+             aes(date, pHR, label = round(pHR, 2)), 
+             color="red", nudge_y = .01, size = 5)
+  
 
