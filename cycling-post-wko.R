@@ -2,8 +2,12 @@ library(tidyverse)
 library(lubridate)
 library("trackeR")
 
-temp <- list.files(pattern = "*.tcx")
+# Read only the most recent TCX file
+directory <- getwd()
+files <- file.info(list.files(directory, pattern = "*.tcx"))
+lastRideFile <- readTCX(rownames(files)[order(files$mtime)][nrow(files)])
 
+# Read all the data
 AllData <-
   list.files(pattern="*.tcx") %>% 
   map_df(~readTCX(.))
@@ -71,7 +75,7 @@ ggplot(lastRide, aes(time, power)) +
   geom_line(aes(y = heart_rate), linetype = "solid", color = "red")
 
 ggplot(lastRide, aes(time, heart_rate)) + 
-  geom_point(color = "red")
+  geom_point(color = "red", alpha=0.05)
 
 # POWERPLOT
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
@@ -87,7 +91,7 @@ powerPlot +
           size = 5, color = "grey30", fontface = "bold") + 
   geom_hline(aes(yintercept = medPowerLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 300, y = 140, label = powerAnnotationLast, 
+  annotate("text", x = 300, y = medPowerLast+7, label = powerAnnotationLast, 
            size = 5, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Power (Watts)") +
   labs(title = "Time Series: Power", 
@@ -111,11 +115,11 @@ HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) +
 HRPlot +
   geom_hline(aes(yintercept = medHRAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
-  annotate("text", x = 0, y = (medHRAll-4), label = HRAnnotationAll, 
+  annotate("text", x = 0, y = (medHRAll+4), label = HRAnnotationAll, 
            size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
   geom_hline(aes(yintercept = medHRLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
-  annotate("text", x = 0, y = (medHRLast+4), label = HRAnnotationLast, 
+  annotate("text", x = 0, y = (medHRLast+5), label = HRAnnotationLast, 
            size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
   xlab("Time") + ylab("Heart Rate") +
   labs(title = "Time Series: Heart Rate", 
@@ -343,6 +347,7 @@ AvgRatioGraph +
              size = 4) +
   geom_label(data = lastRideSummary, 
              aes(date, pHR, label = round(pHR, 2)), 
-             color="red", nudge_y = .01, size = 5)
+             color="red", nudge_y = .01, size = 5) 
   
-
+rank(-dailySummary$pHR)
+tail(dailySummary)
