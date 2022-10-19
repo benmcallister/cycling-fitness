@@ -358,7 +358,7 @@ ggplot(subset(dailySummary), aes(x=median_power, y=pHR, color = date)) +
   geom_point() 
 
 ggplot(subset(dailySummary), aes(x=median_HR, y=median_power, color = date)) +
-  geom_point() 
+  geom_point() + geom_smooth(method = "lm")
 
 # Write the summary data to a .csv
 write.csv(dailySummary, file = "daily-summary.csv")
