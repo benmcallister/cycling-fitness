@@ -347,7 +347,18 @@ AvgRatioGraph +
              size = 4) +
   geom_label(data = lastRideSummary, 
              aes(date, pHR, label = round(pHR, 2)), 
-             color="red", nudge_y = .01, size = 5) 
+             color="red", nudge_y = .02, size = 5) 
   
 rank(-dailySummary$pHR)
 tail(dailySummary)
+
+# This seems significant
+# SHould try modeling this
+ggplot(subset(dailySummary), aes(x=median_power, y=pHR, color = date)) +
+  geom_point() 
+
+ggplot(subset(dailySummary), aes(x=median_HR, y=median_power, color = date)) +
+  geom_point() 
+
+# Write the summary data to a .csv
+write.csv(dailySummary, file = "daily-summary.csv")
