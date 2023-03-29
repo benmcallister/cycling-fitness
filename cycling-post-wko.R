@@ -29,6 +29,11 @@ selectData <- selectData %>% group_by(date) %>%
   ungroup() %>% mutate(across(6, round, 2)) %>% 
   mutate(minutes = as.numeric((minutes = trunc(elapsed_time))))
 
+## ADD WEEK NUMBER
+selectData$week <- lubridate::week(selectData$date)
+selectData$week_date <- lubridate::floor_date(selectData$date, unit = "weeks")
+
+
 # Create a "median" workout
 medianRide <- selectData %>% group_by(row_id) %>% 
   summarize(median_power = median(power, na.rm = TRUE),
@@ -70,12 +75,9 @@ timeSeriesSubtitle <- paste(format(last_wko_date, format="%A %b %d, %Y"),
 
 # simple graph of most recent ride - REQUIRE HR
 ggplot(lastRide, aes(time, power)) + 
-  geom_point(aes(y = power)) + 
-  geom_line(linetype = "dotted") + 
-  geom_line(aes(y = heart_rate), linetype = "solid", color = "red")
-
-ggplot(lastRide, aes(time, heart_rate)) + 
-  geom_point(color = "red", alpha=0.05)
+  geom_point(aes(y = power), alpha = 0.1) + 
+ # geom_line(linetype = "dotted") + 
+  geom_point(aes(y = heart_rate), color = "red", alpha=0.1)
 
 # POWERPLOT
 powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) + 
@@ -115,12 +117,12 @@ HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) +
 HRPlot +
   geom_hline(aes(yintercept = medHRAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
-  annotate("text", x = 0, y = (medHRAll+4), label = HRAnnotationAll, 
-           size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
+  annotate("text", x = 0, y = (medHRAll-3), label = HRAnnotationAll, 
+           size = 3, color = "grey30", fontface = "bold", hjust = 0) + 
   geom_hline(aes(yintercept = medHRLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
   annotate("text", x = 0, y = (medHRLast+5), label = HRAnnotationLast, 
-           size = 5, color = "grey30", fontface = "bold", hjust = 0) + 
+           size = 3, color = "grey30", fontface = "bold", hjust = 0) + 
   xlab("Time") + ylab("Heart Rate") +
   labs(title = "Time Series: Heart Rate", 
        subtitle = timeSeriesSubtitle, 
@@ -145,11 +147,11 @@ efficiencyPlot +
   geom_hline(aes(yintercept = medEfficiencyAll),  
              linetype = "dashed", alpha = 0.9, color = "#00BFC4") + 
   annotate("text", x = 1500, y = 0.87, label = EffAnnotationAll, 
-           size = 5, color = "grey30", fontface = "bold") + 
+           size = 3, color = "grey30", fontface = "bold") + 
   geom_hline(aes(yintercept = medEfficiencyLast),  
              linetype = "solid", alpha = 1, color = "#F8766D") + 
   annotate("text", x = 400, y = 1.01, label = EffAnnotationLast, 
-           size = 5, color = "grey30", fontface = "bold") + 
+           size = 3, color = "grey30", fontface = "bold") + 
   xlab("Time") + ylab("Watt-Minute per Heartbeat") +
   labs(title = "Time Series: \"Efficiency\" (Watt-Minute per Heartbeat)", 
        subtitle = timeSeriesSubtitle, 
@@ -164,6 +166,7 @@ efficiencyPlot +
   )
 
 
+
 ### CREATE THE DAILY SUMMARY DATAFRAME
 
 # function to calculate workout duration in minutes
@@ -174,6 +177,12 @@ find_duration <- function(times){
 # summarize duration of each day's workout
 dailyDuration <- selectData %>% group_by(date) %>% 
   summarize_at(vars(time), list(duration = find_duration))
+
+
+dailyDuration$week_date <- lubridate::floor_date(dailyDuration$date, unit = "weeks")
+weeklyDuration <- dailyDuration %>% group_by(week_date) %>% 
+  summarize(duration_total = sum(duration))
+                                                                     
 
 dailyPowerHR <- selectData %>% group_by(date) %>% 
   summarize_at(vars(power, heart_rate), 
@@ -195,7 +204,7 @@ median(dailySummary$median_power, na.rm = TRUE )
 median(selectData$power, na.rm = TRUE)
 
 summarySubtitle <- paste("All Rides,", 
-                         format(min(selectData$date), format="%b %d"), 
+                         format(min(selectData$date), format="%b %d %Y"), 
                          "-", 
                          format(max(selectData$date), format="%b %d %Y"))
 
@@ -249,7 +258,7 @@ AvgPowerGraph +
              color="red", size = 2) +
   geom_label(data = lastRideSummary, 
              aes(date, median_power, label = median_power), 
-             color="red", nudge_x = -7) +
+             color="red", nudge_y = 5) +
   annotate("text", x = as.Date("2022-07-15"), y = (182), label = "Tabata Ride", 
            vjust = 1, size = 3, color = "grey40") 
 
@@ -352,6 +361,34 @@ AvgRatioGraph +
 rank(-dailySummary$pHR)
 tail(dailySummary)
 
+#Weekly summary plot
+ggplot(weeklyDuration, aes(x=week_date, y=duration_total)) +
+  geom_col() + ylab("Minutes") + xlab("") + 
+  geom_hline(aes(yintercept = 60,  
+             linetype = "dotted", 
+             alpha = 0.8)) + 
+  annotate("text", x = as.Date("2022-05-15"), y = 65, 
+           label = "1 Hour", 
+           size = 4, color = "grey50") + 
+  geom_hline(aes(yintercept = 120,  
+                 linetype = "dotted", 
+                 alpha = 0.8)) + 
+  annotate("text", x = as.Date("2022-05-15"), y = 125, 
+           label = "2 Hours", 
+           size = 4, color = "grey50") + 
+  geom_hline(aes(yintercept = 180,  
+                 linetype = "dotted", 
+                 alpha = 0.8)) + 
+  annotate("text", x = as.Date("2022-05-15"), y = 185, 
+           label = "3 Hours", 
+           size = 4, color = "grey50") + 
+  labs(title = "Weekly Training Volume", 
+       subtitle = summarySubtitle,
+       y = "") +
+  theme(plot.title = element_text(face="bold"),
+        legend.position = "none") 
+
+
 # This seems significant
 # SHould try modeling this
 ggplot(subset(dailySummary), aes(x=median_power, y=pHR, color = date)) +
@@ -360,5 +397,7 @@ ggplot(subset(dailySummary), aes(x=median_power, y=pHR, color = date)) +
 ggplot(subset(dailySummary), aes(x=median_HR, y=median_power, color = date)) +
   geom_point() + geom_smooth(method = "lm")
 
+
 # Write the summary data to a .csv
 write.csv(dailySummary, file = "daily-summary.csv")
+
