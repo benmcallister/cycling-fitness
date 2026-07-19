@@ -84,7 +84,7 @@ powerPlot <- ggplot(lastRide, aes(row_id, power, color = "Last Ride")) +
   geom_point(alpha = 0.2, shape = 3, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_power, color = "Median Ride"), 
             alpha = 0.5) + #labs(color = "hello") +
-  xlim(lastRideLimits) + ylim(90, 160)
+  xlim(lastRideLimits) + ylim(90, 140)
 
 powerPlot +
   geom_hline(aes(yintercept = medPowerAll),  
@@ -112,7 +112,7 @@ HRPlot <- ggplot(lastRide, aes(row_id, heart_rate, color = "Last Ride")) +
   geom_point(alpha = 0.1, shape = 4, position = "jitter") + 
   geom_smooth(data = medianRide, aes(y = median_HR, color = "Median Ride"), 
               alpha = 0.5) + 
-  xlim(lastRideLimits) + ylim(90, 160)
+  xlim(lastRideLimits) + ylim(90, 180)
 
 HRPlot +
   geom_hline(aes(yintercept = medHRAll),  
@@ -141,7 +141,7 @@ efficiencyPlot <- ggplot(lastRide, aes(row_id, efficiency, color = "Last Ride"))
   geom_point(position = "jitter", alpha = 0.4, shape = 1) + #geom_smooth() +
   geom_smooth(data = medianRide, aes(y = efficiency, color = "red"), 
               alpha = 0.5) + labs(color = "Median Ride") +
-  xlim(lastRideLimits) + ylim(0.8, 1.3)
+  xlim(lastRideLimits) + ylim(0.6, 1.5)
 
 efficiencyPlot +
   geom_hline(aes(yintercept = medEfficiencyAll),  
@@ -344,11 +344,11 @@ AvgRatioGraph +
   geom_hline(aes(yintercept = medEfficiencyAll),  
              linetype = "dotted", 
              alpha = 0.8) + 
-  annotate("text", x = as.Date("2022-08-05"), y = 0.84, 
+  annotate("text", x = as.Date("2024-08-05"), y = 0.84, 
            label = paste("median =", medEfficiencyAll), 
            size = 4, color = "grey40") + 
-  annotate("segment", x = as.Date("2022-08-05"), y = 0.85, 
-           xend = as.Date("2022-08-05"), yend = medEfficiencyAll,
+  annotate("segment", x = as.Date("2024-08-05"), y = 0.85, 
+           xend = as.Date("2024-08-05"), yend = medEfficiencyAll,
            arrow = arrow(type = "closed", length = unit(0.02, "npc")), 
            alpha = 0.4) +
   geom_point(data = dailySummary[which.max(dailySummary$date), ], 
@@ -359,6 +359,7 @@ AvgRatioGraph +
              color="red", nudge_y = .02, size = 5) 
   
 rank(-dailySummary$pHR)
+rank(-dailySummary$median_power)
 tail(dailySummary)
 
 #Weekly summary plot

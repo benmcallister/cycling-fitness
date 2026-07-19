@@ -61,10 +61,10 @@ find_duration <- function(times){
 }
 
 # summarize duration of each day's workout
-dailyDuration <- selectData %>% group_by(date) %>% 
+dailyDuration <- leanLastRide %>% 
   summarize_at(vars(time), list(duration = find_duration))
 
-dailyPowerHR <- selectData %>% group_by(date) %>% 
+dailyPowerHR <- leanLastRide %>% 
   summarize_at(vars(power, heart_rate), 
                list( ~ median(., na.rm = TRUE))) %>%
   rename(median_power = power, median_HR = heart_rate)
@@ -81,12 +81,14 @@ medianEnergy <- median(dailySummary$wattMinutes)
 dailySummary
 median(dailySummary$pHR, na.rm = TRUE )
 median(dailySummary$median_power, na.rm = TRUE )
-median(selectData$power, na.rm = TRUE)
 
 summarySubtitle <- paste("All Rides,", 
                          format(min(selectData$date), format="%b %d"), 
                          "-", 
                          format(max(selectData$date), format="%b %d %Y"))
+
+
+## worked through here
 
 # create new variable - training day
 dailySummary$TrainingDay <- dailySummary$date - min(dailySummary$date) + 1
