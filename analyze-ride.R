@@ -84,40 +84,60 @@ medEffLast   <- round(median(lastRide$efficiency, na.rm = TRUE), 2)
 
 subtitle <- paste(format(last_wko_date, "%A %b %d, %Y"), "vs. Median Ride (all history)")
 
+## ---- Time-series chart helper ----
+## Every chart shows four things; each gets its own correctly-coloured legend
+## entry so the reference lines can't be confused with the series they summarise:
+##   This Ride         - the raw samples from this ride (points)
+##   Median Ride       - the typical value at each point across all history (curve)
+##   This ride median  - this ride's overall median (flat line)
+##   All-time median   - the median across every ride (dashed flat line)
+seriesColors <- c(
+  "This Ride"        = "#00BFC4",
+  "Median Ride"      = "#F8766D",
+  "This ride median" = "#3B6FB6",
+  "All-time median"  = "#7A7A7A"
+)
+seriesBreaks <- names(seriesColors)
+
+ts_plot <- function(ride_col, med_col, med_last, med_all,
+                    title, ylab, shape, alpha, ylims = NULL) {
+  refs <- data.frame(
+    yint = c(med_last, med_all),
+    ref  = factor(c("This ride median", "All-time median"),
+                  levels = c("This ride median", "All-time median"))
+  )
+  g <- ggplot(lastRide, aes(row_id, .data[[ride_col]], color = "This Ride")) +
+    geom_point(alpha = alpha, shape = shape) +
+    geom_smooth(data = medianRide, aes(y = .data[[med_col]], color = "Median Ride"),
+                se = FALSE) +
+    geom_hline(data = refs[1, ], aes(yintercept = yint, color = ref),
+               inherit.aes = FALSE) +
+    geom_hline(data = refs[2, ], aes(yintercept = yint, color = ref),
+               inherit.aes = FALSE, linetype = "dashed") +
+    scale_color_manual(values = seriesColors, breaks = seriesBreaks) +
+    xlim(lastRideLimits) +
+    labs(title = title, subtitle = subtitle,
+         x = "Ride progress (sample #)", y = ylab, color = "") +
+    theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+  if (!is.null(ylims)) g <- g + ylim(ylims[1], ylims[2])
+  g
+}
+
 ## ---- Time-series: Power ----
-p_power <- ggplot(lastRide, aes(row_id, power, color = "This Ride")) +
-  geom_point(alpha = 0.2, shape = 3) +
-  geom_smooth(data = medianRide, aes(y = median_power, color = "Median Ride"), se = FALSE) +
-  geom_hline(yintercept = medPowerLast, color = "#F8766D") +
-  geom_hline(yintercept = medPowerAll, linetype = "dashed", color = "#00BFC4") +
-  xlim(lastRideLimits) +
-  labs(title = "Power over the ride", subtitle = subtitle,
-       x = "Ride progress (sample #)", y = "Power (Watts)", color = "") +
-  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+p_power <- ts_plot("power", "median_power", medPowerLast, medPowerAll,
+                   "Power over the ride", "Power (Watts)", shape = 3, alpha = 0.2)
 ggsave("plots/01-power-timeseries.png", p_power, width = 9, height = 5, dpi = 120)
 
 ## ---- Time-series: Heart Rate ----
-p_hr <- ggplot(lastRide, aes(row_id, heart_rate, color = "This Ride")) +
-  geom_point(alpha = 0.15, shape = 4) +
-  geom_smooth(data = medianRide, aes(y = median_HR, color = "Median Ride"), se = FALSE) +
-  geom_hline(yintercept = medHRLast, color = "#F8766D") +
-  geom_hline(yintercept = medHRAll, linetype = "dashed", color = "#00BFC4") +
-  xlim(lastRideLimits) +
-  labs(title = "Heart rate over the ride", subtitle = subtitle,
-       x = "Ride progress (sample #)", y = "Heart Rate (bpm)", color = "") +
-  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+p_hr <- ts_plot("heart_rate", "median_HR", medHRLast, medHRAll,
+                "Heart rate over the ride", "Heart Rate (bpm)", shape = 4, alpha = 0.15,
+                ylims = c(85, 160))
 ggsave("plots/02-hr-timeseries.png", p_hr, width = 9, height = 5, dpi = 120)
 
 ## ---- Time-series: Efficiency ----
-p_eff <- ggplot(lastRide, aes(row_id, efficiency, color = "This Ride")) +
-  geom_point(alpha = 0.3, shape = 1) +
-  geom_smooth(data = medianRide, aes(y = efficiency, color = "Median Ride"), se = FALSE) +
-  geom_hline(yintercept = medEffLast, color = "#F8766D") +
-  geom_hline(yintercept = medEffAll, linetype = "dashed", color = "#00BFC4") +
-  xlim(lastRideLimits) + ylim(0.4, 1.6) +
-  labs(title = "Efficiency (watt-minutes per heartbeat) over the ride", subtitle = subtitle,
-       x = "Ride progress (sample #)", y = "Watt-min / heartbeat", color = "") +
-  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+p_eff <- ts_plot("efficiency", "efficiency", medEffLast, medEffAll,
+                 "Efficiency (watt-minutes per heartbeat) over the ride",
+                 "Watt-min / heartbeat", shape = 1, alpha = 0.3, ylims = c(0.4, 1.6))
 ggsave("plots/03-efficiency-timeseries.png", p_eff, width = 9, height = 5, dpi = 120)
 
 ## ---- Daily / long-term summary ----
