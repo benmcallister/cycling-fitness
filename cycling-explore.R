@@ -2,8 +2,6 @@ library(tidyverse)
 library(lubridate)
 library("trackeR")
 
-# setwd("/Users/benmcallister/Documents/xrm-data-sci/cycling-fitness")
-
 temp <- list.files(pattern = "*.tcx")
 pathToData <- "./raw-data"
 
