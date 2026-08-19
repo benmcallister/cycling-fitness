@@ -4,3 +4,16 @@
 .RData*
 .Ruserdata
 .DS_Store
+
+# Ride data (GPS + heart rate — never commit)
+*.tcx
+raw-data/
+text*.txt
+
+# Generated analysis outputs
+*.png
+*.html
+daily-summary.csv
+plots/
+graphs/
+Volume-Plots/
